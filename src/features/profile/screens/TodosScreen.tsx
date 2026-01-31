@@ -2,6 +2,7 @@ import {NativeStackScreenProps} from "@react-navigation/native-stack";
 import {AppStackParamList} from "../../../navigation/types";
 import {Button, FlatList, Pressable, Text, TextInput, View} from "react-native";
 import React, {useState} from "react";
+import {set} from "react-hook-form";
 
 
 type Props = NativeStackScreenProps<AppStackParamList, "Todos">;
@@ -15,9 +16,32 @@ type Todo = {
 const TodosScreen: React.FC<Props> = () => {
     const [title, setTitle] = useState("");
     const [todos, setTodos] = useState<Todo[]>([]);
+
+    const addTodo = () => {
+        const trimmed = title.trim();
+        if (!trimmed) return;
+
+        setTodos((prev) => [
+            {id: String(Date.now()), title: trimmed, done: false},
+            ...prev,
+        ]);
+        setTitle("");
+    };
+
+    const toggleTodo = (id: string) => {
+        setTodos((prev) =>
+            prev.map((t) => (t.id === id ? {...t, done: !t.done} : t))
+        );
+    };
+
+    const deleteTodo = (id: string) => {
+        setTodos((prev) => prev.filter((t) => t.id !== id));
+    };
+
     return (
         <View style={{flex: 1, padding: 16, gap: 12}}>
             <Text style={{fontSize: 20, fontWeight: "600"}}>Todos (Local State Only)</Text>
+
             <View style={{flexDirection: "row", gap: 8}}>
                 <TextInput
                     value={title}
@@ -32,8 +56,9 @@ const TodosScreen: React.FC<Props> = () => {
                         paddingVertical: 10,
                     }}
                 />
-                <Button title="Add"/>
+                <Button title="Add" onPress={addTodo}/>
             </View>
+
             <FlatList
                 data={todos}
                 keyExtractor={(item) => item.id}
@@ -51,7 +76,7 @@ const TodosScreen: React.FC<Props> = () => {
                             gap: 12,
                         }}
                     >
-                        <Pressable style={{flex: 1}}>
+                        <Pressable onPress={() => toggleTodo(item.id)} style={{flex: 1}}>
                             <Text
                                 style={{
                                     fontSize: 16,
@@ -61,7 +86,8 @@ const TodosScreen: React.FC<Props> = () => {
                                 {item.title}
                             </Text>
                         </Pressable>
-                        <Button title="Delete"/>
+
+                        <Button title="Delete" onPress={() => deleteTodo(item.id)}/>
                     </View>
                 )}
             />
